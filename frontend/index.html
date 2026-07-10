@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>USTED – Room Allocation System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-bg-anim">
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+  </div>
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <img src="assets/usted-logo.png" alt="USTED" class="login-logo-img" />
+    </div>
+    <h1 class="login-title">USTED</h1>
+    <p class="login-sub">Room Allocation System</p>
+
+    <form id="loginForm" class="login-form" autocomplete="off">
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-user"></i> Username / Index Number</label>
+        <input type="text" id="loginUsername" class="form-control" placeholder="Enter username or index number" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-lock"></i> Password</label>
+        <div class="password-wrap">
+          <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required />
+          <button type="button" class="pwd-toggle" onclick="togglePassword()">
+            <i class="fas fa-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-login">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+    </form>
+    <p class="login-hint">USTED — University Student Exam &amp; Room System</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ MAIN APP -->
+<div id="mainApp" class="app-shell" style="display:none">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="assets/usted-logo.png" alt="USTED" class="sidebar-logo" />
+      <div class="sidebar-brand">
+        <span class="brand-name">USTED</span>
+        <span class="brand-sub">Room Allocation</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)">
+        <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="exams" onclick="switchTab('exams',this)" id="navExams">
+        <i class="fas fa-book-open"></i><span>Exams</span>
+      </button>
+      <button class="nav-item" data-tab="rooms" onclick="switchTab('rooms',this)" id="navRooms">
+        <i class="fas fa-door-open"></i><span>Rooms</span>
+      </button>
+      <button class="nav-item" data-tab="allocation" onclick="switchTab('allocation',this)" id="navAllocation">
+        <i class="fas fa-users-cog"></i><span>Allocation</span>
+      </button>
+      <button class="nav-item" data-tab="invigilators" onclick="switchTab('invigilators',this)" id="navInvigilators">
+        <i class="fas fa-user-tie"></i><span>Invigilators</span>
+      </button>
+      <button class="nav-item" data-tab="attendance" onclick="switchTab('attendance',this)" id="navAttendance">
+        <i class="fas fa-clipboard-check"></i><span>Attendance</span>
+      </button>
+      <button class="nav-item" data-tab="reports" onclick="switchTab('reports',this)" id="navReports">
+        <i class="fas fa-chart-bar"></i><span>Reports</span>
+      </button>
+      <button class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" id="navSettings">
+        <i class="fas fa-cog"></i><span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div>
+          <div class="user-name" id="sidebarUserName">Administrator</div>
+          <div class="user-role" id="sidebarRole">Admin</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()" title="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 class="page-title" id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-time" id="topbarTime"></div>
+        <div class="topbar-user">
+          <div class="user-avatar sm" id="topbarAvatar">A</div>
+          <span id="topbarUserName">Administrator</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════ DASHBOARD PAGE -->
+    <section id="dashboard" class="page active">
+      <!-- Admin dashboard: stat cards + charts + table -->
+      <div class="stats-grid" id="adminStatGrid">
+        <div class="stat-card grad-blue">
+          <div class="stat-body">
+            <p class="stat-label">Total Exams</p>
+            <h2 class="stat-value" id="statExams">0</h2>
+            <p class="stat-trend"><i class="fas fa-book-open"></i> Scheduled</p>
+          </div>
+          <div class="stat-icon-wrap"><i class="fas fa-book-open"></i></div>
+        </div>
+        <div class="stat-card grad-green">
+          <div class="stat-body">
+            <p class="stat-label">Active Rooms</p>
+            <h2 class="stat-value" id="statRooms">0</h2>
+            <p class="stat-trend"><i class="fas fa-door-open"></i> Available</p>
+          </div>
+          <div class="stat-icon-wrap"><i class="fas fa-door-open"></i></div>
+        </div>
+        <div class="stat-card grad-purple">
+          <div class="stat-body">
+            <p class="stat-label">Allocations</p>
+            <h2 class="stat-value" id="statAllocations">0</h2>
+            <p class="stat-trend"><i class="fas fa-users-cog"></i> Room-Exam Links</p>
+          </div>
+          <div class="stat-icon-wrap"><i class="fas fa-users-cog"></i></div>
+        </div>
+        <div class="stat-card grad-orange">
+          <div class="stat-body">
+            <p class="stat-label">Students Placed</p>
+            <h2 class="stat-value" id="statStudents">0</h2>
+            <p class="stat-trend"><i class="fas fa-user-graduate"></i> Allocated</p>
+          </div>
+          <div class="stat-icon-wrap"><i class="fas fa-user-graduate"></i></div>
+        </div>
+      </div>
+
+      <div class="charts-row" id="adminCharts">
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <h3><i class="fas fa-chart-line"></i> Student Distribution by Exam</h3>
+          </div>
+          <div class="chart-body">
+            <canvas id="examChart" style="display:none"></canvas>
+            <div class="chart-empty" id="examChartEmpty">
+              <i class="fas fa-chart-line"></i>
+              <p>No allocation data yet</p>
+            </div>
+          </div>
+        </div>
+        <div class="chart-card narrow">
+          <div class="chart-header">
+            <h3><i class="fas fa-chart-pie"></i> Attendance Overview</h3>
+          </div>
+          <div class="chart-body doughnut-wrap">
+            <canvas id="attendanceChart" style="display:none"></canvas>
+            <div class="chart-empty" id="attChartEmpty">
+              <i class="fas fa-clipboard-check"></i>
+              <p>No attendance data yet</p>
+            </div>
+            <div class="att-legend" id="attLegend" style="display:none">
+              <span class="leg present">Present: <b id="legPresent">0</b></span>
+              <span class="leg absent">Absent: <b id="legAbsent">0</b></span>
+              <span class="leg late">Late: <b id="legLate">0</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="adminUpcoming">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Exams</h3>
+          <span class="badge badge-info" id="upcomingCount">0 exams</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Exam</th><th>Code</th><th>Date</th><th>Time</th><th>Students</th><th>Rooms</th><th>Status</th></tr>
+            </thead>
+            <tbody id="upcomingTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Invigilator / Student dashboard injected here dynamically -->
+      <div id="roleDashboard"></div>
+    </section>
+
+    <!-- ══════════════════════════════════════ EXAMS PAGE -->
+    <section id="exams" class="page">
+      <div class="page-actions">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="examSearch" placeholder="Search exams…" oninput="filterExams()" />
+        </div>
+        <button class="btn btn-primary" onclick="openModal('examModal')">
+          <i class="fas fa-plus"></i> Add Exam
+        </button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Code</th><th>Exam Name</th><th>Date</th><th>Time</th><th>Duration</th><th>Students</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="examsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════ ROOMS PAGE -->
+    <section id="rooms" class="page">
+      <div class="page-actions">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="roomSearch" placeholder="Search rooms…" oninput="filterRooms()" />
+        </div>
+        <button class="btn btn-success" onclick="openModal('roomModal')">
+          <i class="fas fa-plus"></i> Add Room
+        </button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Room No.</th><th>Building</th><th>Capacity</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="roomsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════ ALLOCATION PAGE -->
+    <section id="allocation" class="page">
+      <div class="alloc-top-cards">
+        <div class="card alloc-form-card">
+          <div class="card-header">
+            <h3><i class="fas fa-magic"></i> Auto Allocate Students</h3>
+          </div>
+          <form id="allocForm" enctype="multipart/form-data">
+            <div class="form-group">
+              <label class="form-label">Select Exam</label>
+              <select class="form-control" id="allocExam" required>
+                <option value="">Choose exam…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Upload Student File
+                <span class="hint">(CSV or Excel: Index No., Name, Email, Phone, Programme)</span>
+              </label>
+              <div class="file-drop" id="fileDrop" onclick="document.getElementById('studentFile').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p id="fileDropLabel">Click to upload or drag &amp; drop</p>
+                <small>.csv / .xlsx / .xls accepted</small>
+              </div>
+              <input type="file" id="studentFile" accept=".csv,.xlsx,.xls"
+                     style="display:none" onchange="onFileSelected(this)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Allocation Method</label>
+              <div class="method-toggle">
+                <label class="method-opt">
+                  <input type="radio" name="method" value="index" checked />
+                  <span><i class="fas fa-sort-alpha-down"></i> By Index Number</span>
+                </label>
+                <label class="method-opt">
+                  <input type="radio" name="method" value="random" />
+                  <span><i class="fas fa-random"></i> Random</span>
+                </label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning full-width" id="allocBtn">
+              <i class="fas fa-magic"></i> Allocate Rooms
+            </button>
+          </form>
+        </div>
+        <div class="alloc-summary-card" id="allocSummary" style="display:none">
+          <div class="summary-header"><i class="fas fa-check-circle"></i> Allocation Summary</div>
+          <div id="summaryBody"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-list"></i> Current Allocations</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Exam</th><th>Room</th><th>Students</th><th>Method</th><th>Date &amp; Time</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="allocTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════ INVIGILATORS PAGE -->
+    <section id="invigilators" class="page">
+      <div class="page-actions">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="invSearch" placeholder="Search invigilators…" oninput="filterInvigilators()" />
+        </div>
+        <button class="btn btn-primary" onclick="openModal('invModal')">
+          <i class="fas fa-plus"></i> Add Invigilator
+        </button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Assigned Rooms</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="invTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════ ATTENDANCE PAGE -->
+    <section id="attendance" class="page">
+      <div class="stats-grid three-col">
+        <div class="stat-card grad-green sm">
+          <div class="stat-body"><p class="stat-label">Present</p><h2 class="stat-value" id="presentCount">0</h2></div>
+          <div class="stat-icon-wrap"><i class="fas fa-check"></i></div>
+        </div>
+        <div class="stat-card grad-red sm">
+          <div class="stat-body"><p class="stat-label">Absent</p><h2 class="stat-value" id="absentCount">0</h2></div>
+          <div class="stat-icon-wrap"><i class="fas fa-times"></i></div>
+        </div>
+        <div class="stat-card grad-orange sm">
+          <div class="stat-body"><p class="stat-label">Late</p><h2 class="stat-value" id="lateCount">0</h2></div>
+          <div class="stat-icon-wrap"><i class="fas fa-clock"></i></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><i class="fas fa-clipboard-check"></i> Mark Attendance</h3></div>
+        <div style="padding:1rem 1.3rem 0">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Select Exam</label>
+              <select class="form-control" id="attExam" onchange="loadAttendanceList()">
+                <option value="">Choose exam…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Session Date</label>
+              <input type="date" class="form-control" id="attDate" onchange="loadAttendanceList()" />
+            </div>
+          </div>
+        </div>
+        <div id="attList"></div>
+        <div id="attSubmitWrap" style="display:none;padding:1rem 1.3rem">
+          <button class="btn btn-success full-width" onclick="submitAttendance()">
+            <i class="fas fa-save"></i> Save Attendance
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><i class="fas fa-history"></i> Attendance History</h3></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Student</th><th>Index No.</th><th>Exam</th><th>Room</th><th>Status</th><th>Date</th></tr>
+            </thead>
+            <tbody id="attHistoryTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ REPORTS PAGE -->
+    <section id="reports" class="page">
+      <h2 class="section-heading"><i class="fas fa-chart-bar"></i> Reports &amp; Analytics</h2>
+      <div class="reports-grid">
+        <div class="report-card grad-blue" onclick="exportReport('exams')">
+          <div class="report-icon">📚</div>
+          <h3>Exam Report</h3>
+          <p>Complete list of all scheduled exams</p>
+          <div class="report-btn"><i class="fas fa-download"></i> Export Excel</div>
+        </div>
+        <div class="report-card grad-green" onclick="exportReport('rooms')">
+          <div class="report-icon">🏢</div>
+          <h3>Room Report</h3>
+          <p>Room inventory and capacity data</p>
+          <div class="report-btn"><i class="fas fa-download"></i> Export Excel</div>
+        </div>
+        <div class="report-card grad-purple" onclick="exportReport('allocations')">
+          <div class="report-icon">📋</div>
+          <h3>Allocation Report</h3>
+          <p>Student–room assignment details</p>
+          <div class="report-btn"><i class="fas fa-download"></i> Export Excel</div>
+        </div>
+        <div class="report-card grad-orange" onclick="exportReport('attendance')">
+          <div class="report-icon">✅</div>
+          <h3>Attendance Report</h3>
+          <p>Full attendance records per exam</p>
+          <div class="report-btn"><i class="fas fa-download"></i> Export Excel</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ SETTINGS PAGE -->
+    <section id="settings" class="page">
+      <h2 class="section-heading"><i class="fas fa-cog"></i> Account Settings</h2>
+      <div class="card" style="max-width:560px">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user-circle"></i> Change Credentials</h3>
+        </div>
+        <div style="padding:1.5rem">
+          <div class="form-group">
+            <label class="form-label">Current Username</label>
+            <input type="text" class="form-control" id="settingsUsername" disabled style="opacity:.65" />
+          </div>
+          <div id="settingsStudentNote" style="display:none;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:.85rem;margin-bottom:1rem;font-size:.85rem;color:#1E40AF">
+            <i class="fas fa-info-circle"></i> Students use their index number as username. It cannot be changed.
+          </div>
+          <div id="settingsUsernameRow">
+            <div class="form-group">
+              <label class="form-label">New Username
+                <small style="color:var(--text-muted)">(leave blank to keep current)</small>
+              </label>
+              <input type="text" class="form-control" id="settingsNewUsername" placeholder="Enter new username" />
+            </div>
+          </div>
+          <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--border)" />
+          <form id="settingsForm">
+            <div class="form-group">
+              <label class="form-label">Current Password <span style="color:#EF4444">*</span></label>
+              <input type="password" class="form-control" id="settingsCurrentPwd" placeholder="Required to save any change" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password
+                <small style="color:var(--text-muted)">(leave blank to keep current)</small>
+              </label>
+              <input type="password" class="form-control" id="settingsNewPwd" placeholder="Min 6 characters" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" id="settingsConfirmPwd" placeholder="Repeat new password" />
+            </div>
+            <button type="submit" class="btn btn-primary full-width" id="settingsSubmitBtn">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /mainApp -->
+
+<!-- ═════════════════════════════════════════════ MODALS -->
+
+<!-- Exam Modal -->
+<div id="examModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="examModalTitle">Add New Exam</h3>
+      <button class="modal-close" onclick="closeModal('examModal')">×</button>
+    </div>
+    <form id="examForm">
+      <input type="hidden" id="examId" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Exam Name</label>
+          <input type="text" class="form-control" id="examName" required placeholder="e.g. Mathematics Final" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exam Code</label>
+          <input type="text" class="form-control" id="examCode" required placeholder="e.g. MATH301" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" class="form-control" id="examDate" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          <input type="time" class="form-control" id="examTime" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duration (minutes)</label>
+          <input type="number" class="form-control" id="examDuration" required placeholder="120" min="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Students</label>
+          <input type="number" class="form-control" id="examStudents" required placeholder="50" min="1" />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary full-width" id="examSubmitBtn">
+        <i class="fas fa-plus-circle"></i> Create Exam
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Room Modal -->
+<div id="roomModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="roomModalTitle">Add New Room</h3>
+      <button class="modal-close" onclick="closeModal('roomModal')">×</button>
+    </div>
+    <form id="roomForm">
+      <input type="hidden" id="roomId" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Room Number</label>
+          <input type="text" class="form-control" id="roomNumber" required placeholder="e.g. A101" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Building Name</label>
+          <input type="text" class="form-control" id="roomBuilding" placeholder="e.g. Science Block" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Capacity</label>
+        <input type="number" class="form-control" id="roomCapacity" required placeholder="30" min="1" />
+      </div>
+      <button type="submit" class="btn btn-success full-width" id="roomSubmitBtn">
+        <i class="fas fa-plus-circle"></i> Create Room
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Invigilator Modal -->
+<div id="invModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="invModalTitle">Add Invigilator</h3>
+      <button class="modal-close" onclick="closeModal('invModal')">×</button>
+    </div>
+    <form id="invForm">
+      <input type="hidden" id="invId" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="invName" required placeholder="Dr. John Mensah" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="invUsername" required placeholder="jmensah" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Password <small id="pwdHint" style="color:var(--text-muted)">(required)</small></label>
+          <input type="password" class="form-control" id="invPassword" placeholder="Min 6 characters" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-control" id="invPhone" placeholder="0244000000" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" id="invEmail" placeholder="john@usted.edu.gh" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Rooms
+          <small style="color:var(--text-muted)">(Hold Ctrl/Cmd to select multiple)</small>
+        </label>
+        <select multiple class="form-control" id="invRooms" style="min-height:110px"></select>
+      </div>
+      <button type="submit" class="btn btn-primary full-width" id="invSubmitBtn">
+        <i class="fas fa-plus-circle"></i> Create Invigilator
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- View Allocation Modal -->
+<div id="viewAllocModal" class="modal-overlay">
+  <div class="modal-box wide">
+    <div class="modal-head">
+      <h3 id="viewAllocTitle">Allocation Details</h3>
+      <button class="modal-close" onclick="closeModal('viewAllocModal')">×</button>
+    </div>
+    <div id="viewAllocBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
