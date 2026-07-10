@@ -15,7 +15,7 @@ const pool = mysql.createPool({
   charset:            'utf8mb4',
 });
 
-// Test connection on startup
+ Test connection on startup
 pool.getConnection()
   .then(conn => {
     console.log('✅  MySQL connected to:', process.env.DB_NAME);
